@@ -1,12 +1,5 @@
 # pricing.py
-# This is the mathematical heart of the project.
-#
-# What it does:
-#   1. Takes the raw options data and prepares it (calculates time to expiry, etc.)
-#   2. Builds a volatility surface — a smooth model of how implied volatility
-#      varies by strike and expiry (instead of using each contract's noisy IV directly)
-#   3. Prices every contract using Black-Scholes with the smoothed vol
-#   4. Computes the Greeks (delta, gamma, vega, theta)
+
 
 import numpy as np
 import pandas as pd
@@ -16,10 +9,7 @@ from datetime import datetime, date
 from loguru import logger
 
 
-# ---------------------------------------------------------------------------
 # Black-Scholes implementation
-# We implement it ourselves so it's easy to understand and modify.
-# ---------------------------------------------------------------------------
 
 def black_scholes_price(S, K, T, r, sigma, q, option_type):
     """
@@ -90,9 +80,7 @@ def compute_greeks(S, K, T, r, sigma, q, option_type):
             "vega": round(vega, 4), "theta": round(theta, 4)}
 
 
-# ---------------------------------------------------------------------------
 # Volatility surface
-# ---------------------------------------------------------------------------
 
 def build_vol_surface(df):
     """
@@ -151,9 +139,7 @@ def get_smoothed_iv(spline, moneyness, time_to_expiry, raw_iv):
         return raw_iv
 
 
-# ---------------------------------------------------------------------------
 # Main pricing function
-# ---------------------------------------------------------------------------
 
 def price_options(data: dict, risk_free_rate: float) -> pd.DataFrame:
     """
@@ -173,7 +159,7 @@ def price_options(data: dict, risk_free_rate: float) -> pd.DataFrame:
 
     today = date.today()
 
-    # --- Time to expiry ---
+    # Time to expiry
     # Convert expiry date string to a decimal in years
     def calc_tte(expiry_str):
         expiry_date = datetime.strptime(expiry_str, "%Y-%m-%d").date()
@@ -182,21 +168,21 @@ def price_options(data: dict, risk_free_rate: float) -> pd.DataFrame:
 
     df["time_to_expiry"] = df["expiry"].apply(calc_tte)
 
-    # --- Moneyness ---
+    # Moneyness
     # log(K/S): 0 means at-the-money, positive = OTM call / ITM put, negative = ITM call / OTM put
     df["moneyness"] = np.log(df["strike"] / S)
 
-    # --- Build vol surface ---
+    # Build vol surface 
     vol_surface = build_vol_surface(df)
 
-    # --- Smooth IV per contract ---
+    # Smooth IV per contract
     df["smoothed_iv"] = df.apply(
         lambda row: get_smoothed_iv(vol_surface, row["moneyness"],
                                     row["time_to_expiry"], row["market_iv"]),
         axis=1
     )
 
-    # --- Black-Scholes theoretical price ---
+    # Black-Scholes theoretical price
     df["model_price"] = df.apply(
         lambda row: black_scholes_price(
             S=S,
@@ -210,7 +196,7 @@ def price_options(data: dict, risk_free_rate: float) -> pd.DataFrame:
         axis=1
     )
 
-    # --- Greeks ---
+    # Greeks
     greeks_list = df.apply(
         lambda row: compute_greeks(
             S=S, K=row["strike"], T=row["time_to_expiry"],
