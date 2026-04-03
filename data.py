@@ -1,9 +1,5 @@
 # data.py
-# Responsible for fetching all the raw data we need:
-#   - The options chain (all available contracts for a ticker)
-#   - The current stock price
-#   - The risk-free interest rate (from the US Federal Reserve)
-#   - The dividend yield
+
 
 import os
 import yfinance as yf
@@ -12,7 +8,7 @@ from fredapi import Fred
 from loguru import logger
 from dotenv import load_dotenv
 
-load_dotenv()  # reads your .env file so we can use the API key
+load_dotenv()  # reads .env file 
 
 
 def get_risk_free_rate() -> float:
@@ -47,7 +43,7 @@ def get_options_data(ticker: str) -> dict:
     logger.info(f"Fetching data for {ticker}...")
     stock = yf.Ticker(ticker)
 
-    # --- Spot price ---
+    # Spot price
     info = stock.info
     spot_price = info.get("currentPrice") or info.get("regularMarketPrice")
     if not spot_price:
@@ -56,10 +52,10 @@ def get_options_data(ticker: str) -> dict:
         spot_price = float(hist["Close"].iloc[-1])
     logger.info(f"{ticker} spot price: ${spot_price:.2f}")
 
-    # --- Dividend yield ---
+    # Dividend yield
     dividend_yield = info.get("dividendYield") or 0.0
 
-    # --- Options chain ---
+    # Options chain
     # yfinance gives us a list of expiry dates available for this ticker
     expiry_dates = stock.options
     if not expiry_dates:
