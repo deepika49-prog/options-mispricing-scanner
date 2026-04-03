@@ -1,14 +1,4 @@
 # dashboard.py
-# The interactive web dashboard built with Plotly Dash.
-#
-# Two main components:
-#   1. A 3D volatility surface chart — shows how IV varies across strikes and expiries
-#   2. A ranked mispricing table — shows the top flagged contracts
-#
-# Run this file directly to launch the dashboard:
-#   python dashboard.py
-#
-# Then open your browser to: http://127.0.0.1:8050
 
 import pandas as pd
 import numpy as np
@@ -23,9 +13,8 @@ from pricing import price_options
 from signals import generate_signals, get_vol_surface_data
 
 
-# ---------------------------------------------------------------------------
 # Color scheme
-# ---------------------------------------------------------------------------
+
 COLORS = {
     "bg": "#0f1117",
     "card": "#1a1d27",
@@ -39,9 +28,7 @@ COLORS = {
 }
 
 
-# ---------------------------------------------------------------------------
 # Chart builders
-# ---------------------------------------------------------------------------
 
 def build_vol_surface_chart(surface_df: pd.DataFrame, ticker: str):
     """
@@ -54,7 +41,7 @@ def build_vol_surface_chart(surface_df: pd.DataFrame, ticker: str):
         return go.Figure().add_annotation(text="No vol surface data", showarrow=False)
 
     # Pivot to a grid for the surface plot
-    # We need a regular grid, so we bin strikes and expiries
+    
     df = surface_df.copy()
     df["expiry_months"] = (df["time_to_expiry"] * 12).round(1)
     df["iv_pct"] = df["smoothed_iv"] * 100  # convert to percentage
@@ -146,14 +133,12 @@ def build_edge_distribution_chart(signals_df: pd.DataFrame, ticker: str):
     return fig
 
 
-# ---------------------------------------------------------------------------
 # Dashboard layout and app
-# ---------------------------------------------------------------------------
 
 def create_app():
     app = Dash(__name__, title="Options Mispricing Scanner")
 
-    # ---- Styles ----
+    # Styles 
     card_style = {
         "backgroundColor": COLORS["card"],
         "border": f"1px solid {COLORS['border']}",
@@ -228,7 +213,7 @@ def create_app():
         dcc.Store(id="signals-store"),
     ])
 
-    # ---- Callback ----
+    # Callback
     @app.callback(
         Output("status-bar", "children"),
         Output("metric-cards", "children"),
