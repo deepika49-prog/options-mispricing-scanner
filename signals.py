@@ -1,29 +1,21 @@
 # signals.py
-# This module takes the priced options DataFrame and finds the "interesting" ones —
-# contracts where the market price deviates significantly from our model price.
-#
-# A positive edge means the market is OVERPRICING the option (potential sell opportunity).
-# A negative edge means the market is UNDERPRICING it (potential buy opportunity).
-#
-# We also apply liquidity filters because a theoretical edge means nothing
-# if the bid-ask spread is wider than the edge itself.
+
 
 import pandas as pd
 import numpy as np
 from loguru import logger
 
 
-# --- Filters ---
-# These constants control which contracts we consider "tradeable enough" to flag.
-# You can tune these based on the ticker (e.g. SPY has much more liquidity than a small-cap).
+# Filters 
 
-MIN_OPEN_INTEREST = 50      # Minimum open interest — avoids ghost contracts
+
+MIN_OPEN_INTEREST = 50      # Minimum open interest : avoids ghost contracts
 MIN_VOLUME = 5              # Minimum daily volume
-MAX_SPREAD_PCT = 0.20       # Max bid-ask spread as % of mid — filters wide spreads
-MIN_TIME_TO_EXPIRY = 7/365  # At least 1 week out — avoids expiry-day weirdness
-MAX_TIME_TO_EXPIRY = 1.5    # At most 18 months — very long-dated options are illiquid
-MIN_DELTA_ABS = 0.05        # Avoid deep OTM options (delta < 0.05) — BS breaks down
-MAX_DELTA_ABS = 0.95        # Avoid deep ITM options — illiquid, wide spreads
+MAX_SPREAD_PCT = 0.20       # Max bid-ask spread as % of mid : filters wide spreads
+MIN_TIME_TO_EXPIRY = 7/365  # At least 1 week out : avoids expiry-day weirdness
+MAX_TIME_TO_EXPIRY = 1.5    # At most 18 months : very long-dated options are illiquid
+MIN_DELTA_ABS = 0.05        # Avoid deep OTM options (delta < 0.05) : BS breaks down
+MAX_DELTA_ABS = 0.95        # Avoid deep ITM options : illiquid, wide spreads
 
 
 def compute_edge(df: pd.DataFrame) -> pd.DataFrame:
